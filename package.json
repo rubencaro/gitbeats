@@ -1,0 +1,30 @@
+{
+  "name": "gitbeats",
+  "version": "0.1.0",
+  "description": "GitHub activity viewer",
+  "main": "index.js",
+  "scripts": {
+    "dev": "brunch watch --server",
+    "build": "brunch build --production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rubencaro/gitbeats"
+  },
+  "keywords": [
+    "github",
+    "riotjs",
+    "brunch"
+  ],
+  "author": "rubencaro <ruben.caro.estevez@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rubencaro/gitbeats/issues"
+  },
+  "devDependencies": {
+    "brunch": "~1.8.0"
+  },
+  "dependencies": {
+    "riot": "~2.0.14"
+  }
+}

@@ -10,8 +10,8 @@ It lives on the client. No auth logic. You must be logged in into GitHub for it 
 
 ## Development
 
-`npm install` to get dependencies.
+`npm install && bower install` to get dependencies.
 
-`brunch watch --server` to get an autoupdated static preview on development.
+`npm run dev` to get an autoupdated static preview on development.
 
-`brunch build --production` and push the results to the `gh-pages` branch to publish [here](http://rubencaro.github.io/gitbeats).
+`npm run build` and push the results to the `gh-pages` branch to publish [here](http://rubencaro.github.io/gitbeats).

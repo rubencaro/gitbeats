@@ -12,6 +12,6 @@ It lives on the client. No auth logic. You must be logged in into GitHub for it 
 
 `npm install && bower install` to get dependencies.
 
-`npm run dev` to get an autoupdated static preview on development.
+`npm run dev` to get an autoupdated static preview on development. To mimic github pages' environment, simply open `index.html` at the root of the project.
 
 `npm run build` and push the results to the `gh-pages` branch to publish [here](http://rubencaro.github.io/gitbeats).

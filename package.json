@@ -4,7 +4,7 @@
   "homepage": "http://rubencaro.github.io/gitbeats",
   "description": "GitHub activity viewer",
   "scripts": {
-    "dev": "brunch watch --server",
+    "dev": "brunch watch",
     "build": "brunch build --production",
     "test": "brunch test"
   },
@@ -21,6 +21,7 @@
     "brunch": "~1.8.0",
     "javascript-brunch": "~1.7.1",
     "sass-brunch": "~1.8.10",
-    "bower": "~1.4.1"
+    "bower": "~1.4.1",
+    "riot-brunch": "0.0.2"
   }
 }

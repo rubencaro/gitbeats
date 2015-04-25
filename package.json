@@ -1,0 +1,26 @@
+{
+  "name": "gitbeats",
+  "version": "0.1.0",
+  "homepage": "http://rubencaro.github.io/gitbeats",
+  "description": "GitHub activity viewer",
+  "scripts": {
+    "dev": "brunch watch --server",
+    "build": "brunch build --production",
+    "test": "brunch test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rubencaro/gitbeats"
+  },
+  "author": "rubencaro <ruben.caro.estevez@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rubencaro/gitbeats/issues"
+  },
+  "devDependencies": {
+    "brunch": "~1.8.0",
+    "javascript-brunch": "~1.7.1",
+    "sass-brunch": "~1.8.10",
+    "bower": "~1.4.1"
+  }
+}

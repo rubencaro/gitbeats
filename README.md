@@ -6,7 +6,7 @@ GitHub activity viewer
 
 A static bit of code that fetches some of your GitHub data and renders it to you so you can get an overview of all activity.
 
-It lives on the client. No auth logic. You must be logged in into GitHub for it to be able to fetch the data.
+It lives on the client. No auth logic. You must supply a [personal api token](https://github.com/blog/1509-personal-api-tokens) for it to be able to fetch the data.
 
 ## Development
 

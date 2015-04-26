@@ -10,7 +10,7 @@ It lives on the client. No auth logic. You must supply a username and a [persona
 
 ## Development
 
-`npm install && bower install` to get dependencies.
+`npm install && node_modules/.bin/bower install` to get dependencies.
 
 `npm run dev` to get an autoupdated static preview on development. To mimic github pages' environment, simply open `index.html` inside the public folder.
 

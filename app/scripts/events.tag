@@ -3,13 +3,13 @@
   <script>
     this.on('mount', function() {
       // get data for children
-
+      var user = $('#username').val();
+      var events = opts.get('https://api.github.com/users/' + user + '/events');
+      console.dir(events);
     })
   </script>
 
-  <h2>Tabs</h2>
-  <ul>
-    <li each={ events } >{ this }</li>
-  </ul>
+  <div>
 
+  </div>
 </events>

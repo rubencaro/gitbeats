@@ -114,19 +114,22 @@ require.register("app", function(exports, require, module) {
 
 var App = {
   init: function() {
+    require('scripts/auth');
+    riot.mount('auth');
+    require('scripts/events');
+    riot.mount('events', this);
     console.log('App initialized.');
-
-    riot.mount('events');
   },
 
   // returns the promisable jqXHR object
   get: function(url) {
-    $.ajax({
+    return $.ajax({
       dataType: "json",
       url: url,
       crossDomain: true,
       beforeSend: function(xhr) {
-        xhr.setRequestHeader('Authorization', "Basic " + btoa("tokenhere:x-oauth-basic"));
+        var token = $('#token').val();
+        xhr.setRequestHeader('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
       }
     });
   },
@@ -145,11 +148,20 @@ module.exports = App;
 
 });
 
+require.register("scripts/auth", function(exports, require, module) {
+riot.tag('auth', '<input id="username" type="text" placeholder="GitHub username" value="rubencaro"> <input id="token" type="text" placeholder="Personal API token" value=""> <button>Apply</button>', function(opts) {
+
+});
+
+});
+
 require.register("scripts/events", function(exports, require, module) {
-riot.tag('events', '<h2>Tabs</h2> <ul> <li each="{ events }" >{ this }</li> </ul>', function(opts) {
+riot.tag('events', '<div> </div>', function(opts) {
     this.on('mount', function() {
 
-
+      var user = $('#username').val();
+      var events = opts.get('https://api.github.com/users/' + user + '/events');
+      console.dir(events);
     })
   
 });

@@ -114,13 +114,12 @@ require.register("app", function(exports, require, module) {
 
 var App = {
   init: function() {
-    require('scripts/auth');
-    riot.mount('auth');
-    require('scripts/events');
-    riot.mount('events', this);
+    this.mount('auth');
+    this.mount('main');
     console.log('App initialized.');
   },
 
+  // make the ajax call adding the Auth header
   // returns the promisable jqXHR object
   get: function(url) {
     return $.ajax({
@@ -134,14 +133,25 @@ var App = {
     });
   },
 
-  // calls riot.mount for the given tag, passing the JSON response
-  // from the given url
-  mount: function(tag,url){
-    get(url)
-    .done(function(json){ riot.mount(tag,json) })
-    .fail(function(jqXHR, textStatus){ console.log(textStatus) })
-    .always(function(){ console.log('done') })
-  }
+  // make get request and return the response json data, or the error
+  request: function(url) {
+    var res = {};
+    // get
+    this.get(url)
+    .done(function(data){ res.data = data; })
+    .fail(function(jqXHR, textStatus){ res.error = textStatus; })
+    .always(function(){ console.dir(res) })
+    return res;
+  },
+
+  // calls riot.mount for the given tag
+  mount: function(tag){
+    // require & mount
+    require('scripts/' + tag);
+    riot.mount(tag, { app: this });
+  },
+
+
 };
 
 module.exports = App;
@@ -149,19 +159,34 @@ module.exports = App;
 });
 
 require.register("scripts/auth", function(exports, require, module) {
-riot.tag('auth', '<input id="username" type="text" placeholder="GitHub username" value="rubencaro"> <input id="token" type="text" placeholder="Personal API token" value=""> <button>Apply</button>', function(opts) {
+riot.tag('auth', '<input id="username" type="text" placeholder="GitHub username" value="rubencaro"> <input id="token" type="text" placeholder="Personal API token" value="token"> <button>Apply</button>', function(opts) {
 
 });
 
 });
 
 require.register("scripts/events", function(exports, require, module) {
-riot.tag('events', '<div> </div>', function(opts) {
-    this.on('mount', function() {
+riot.tag('events', '<div each="{ ev in opts.events }"> { ev } </div> <div if="{ opts.error }"> { opts.error } </div>', function(opts) {
+    this.on('update', function() {
 
       var user = $('#username').val();
-      var events = opts.get('https://api.github.com/users/' + user + '/events');
-      console.dir(events);
+      console.log('user ' + user);
+      if(typeof user == 'undefined'){ return; }
+      console.log('hey')
+      var url = 'https://api.github.com/users/' + user + '/events';
+      opts.app.get(url)
+      .done(function(json){ opts.events = json })
+      .fail(function(jqXHR,msg){ opts.error = msg })
+    })
+  
+});
+
+});
+
+require.register("scripts/main", function(exports, require, module) {
+riot.tag('main', '<h1> GitBeats <small>• your GitHub vitals</small> </h1> <events></events>', function(opts) {
+    this.on('mount', function() {
+      opts.app.mount('events');
     })
   
 });

@@ -2,13 +2,12 @@
 
 var App = {
   init: function() {
-    require('scripts/auth');
-    riot.mount('auth');
-    require('scripts/events');
-    riot.mount('events', this);
+    this.mount('auth');
+    this.mount('main');
     console.log('App initialized.');
   },
 
+  // make the ajax call adding the Auth header
   // returns the promisable jqXHR object
   get: function(url) {
     return $.ajax({
@@ -22,14 +21,25 @@ var App = {
     });
   },
 
-  // calls riot.mount for the given tag, passing the JSON response
-  // from the given url
-  mount: function(tag,url){
-    get(url)
-    .done(function(json){ riot.mount(tag,json) })
-    .fail(function(jqXHR, textStatus){ console.log(textStatus) })
-    .always(function(){ console.log('done') })
-  }
+  // make get request and return the response json data, or the error
+  request: function(url) {
+    var res = {};
+    // get
+    this.get(url)
+    .done(function(data){ res.data = data; })
+    .fail(function(jqXHR, textStatus){ res.error = textStatus; })
+    .always(function(){ console.dir(res) })
+    return res;
+  },
+
+  // calls riot.mount for the given tag
+  mount: function(tag){
+    // require & mount
+    require('scripts/' + tag);
+    riot.mount(tag, { app: this });
+  },
+
+
 };
 
 module.exports = App;

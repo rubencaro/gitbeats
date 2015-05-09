@@ -1,9 +1,12 @@
 "use strict";
 
 var App = {
+
+  main: undefined,
+
   init: function() {
-    this.mount('auth');
-    this.mount('main');
+    this.main = this.mount('main')[0];
+    console.dir(this.main);
     console.log('App initialized.');
   },
 
@@ -35,10 +38,13 @@ var App = {
   // calls riot.mount for the given tag
   mount: function(tag){
     // require & mount
-    require('scripts/' + tag);
-    riot.mount(tag, { app: this });
+    require('tags/' + tag);
+    return riot.mount(tag, { app: this });
   },
 
+  refresh: function(e,app){
+    app.main.update();
+  },
 
 };
 

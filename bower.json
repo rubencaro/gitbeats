@@ -10,7 +10,7 @@
     "tests"
   ],
   "dependencies": {
-    "riotjs": "~2.0.14",
-    "bootstrap": "~3.3.4"
+    "bootstrap": "~3.3.4",
+    "react": "~0.13.3"
   }
 }

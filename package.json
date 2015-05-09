@@ -22,6 +22,6 @@
     "javascript-brunch": "~1.7.1",
     "sass-brunch": "~1.8.10",
     "bower": "~1.4.1",
-    "riot-brunch": "0.0.2"
+    "react-brunch": "~1.0.9"
   }
 }

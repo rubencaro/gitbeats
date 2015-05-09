@@ -113,9 +113,12 @@ require.register("app", function(exports, require, module) {
 "use strict";
 
 var App = {
+
+  main: undefined,
+
   init: function() {
-    this.mount('auth');
-    this.mount('main');
+    this.main = this.mount('main')[0];
+    console.dir(this.main);
     console.log('App initialized.');
   },
 
@@ -147,10 +150,13 @@ var App = {
   // calls riot.mount for the given tag
   mount: function(tag){
     // require & mount
-    require('scripts/' + tag);
-    riot.mount(tag, { app: this });
+    require('tags/' + tag);
+    return riot.mount(tag, { app: this });
   },
 
+  refresh: function(e,app){
+    app.main.update();
+  },
 
 };
 
@@ -158,14 +164,14 @@ module.exports = App;
 
 });
 
-require.register("scripts/auth", function(exports, require, module) {
-riot.tag('auth', '<input id="username" type="text" placeholder="GitHub username" value="rubencaro"> <input id="token" type="text" placeholder="Personal API token" value="token"> <button>Apply</button>', function(opts) {
+require.register("tags/auth", function(exports, require, module) {
+riot.tag('auth', '<input id="username" type="text" placeholder="GitHub username"> <input id="password" type="text" placeholder="Personal API token"> <button onclick="{ opts.app.refresh(opts.app) }">Apply</button>', function(opts) {
 
 });
 
 });
 
-require.register("scripts/events", function(exports, require, module) {
+require.register("tags/events", function(exports, require, module) {
 riot.tag('events', '<div each="{ ev in opts.events }"> { ev } </div> <div if="{ opts.error }"> { opts.error } </div>', function(opts) {
     this.on('update', function() {
 
@@ -183,9 +189,10 @@ riot.tag('events', '<div each="{ ev in opts.events }"> { ev } </div> <div if="{ 
 
 });
 
-require.register("scripts/main", function(exports, require, module) {
-riot.tag('main', '<h1> GitBeats <small>• your GitHub vitals</small> </h1> <events></events>', function(opts) {
+require.register("tags/main", function(exports, require, module) {
+riot.tag('main', '<h1> GitBeats <small>• your GitHub vitals</small> </h1> <auth></auth> <events></events>', function(opts) {
     this.on('mount', function() {
+      opts.app.mount('auth');
       opts.app.mount('events');
     })
   

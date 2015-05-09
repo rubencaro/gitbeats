@@ -115,28 +115,73 @@ require.register("app", function(exports, require, module) {
 var App = {
 
   init: function() {
-    var user = 'rubencaro';
-    var url = 'https://api.github.com/users/' + user + '/events';
-    this.get(url).then(function(r){ console.dir(r); });
+    // var url = 'https://api.github.com/users/' + user + '/events';
+    // var url = 'https://api.admanmedia.com/fakeurl';
+    // this.get(url).then(function(r){ console.dir(r); });
+    require('scripts/main');
     console.log('App initialized.');
   },
 
-  // make the ajax call adding the Auth header
+  // make the ajax call adding the host and the Auth header
   // returns the promisable fetch object, with the parsed JSON as parameter
-  get: function(url) {
+  get: function(path) {
+    var token = 'token';
 
     var h = new Headers();
     h.append('Content-Type', 'application/json');
     h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
 
-    var r = new Request(url, { headers: h, mode: 'cors' });
-
-    return fetch(r).then(function(r){ return r.json() })
+    return fetch('https://api.github.com/' + path, { headers: h, mode: 'cors' })
+      .then(function(r){
+        console.dir(r);
+        return r.json();
+      })
   },
 
 };
 
 module.exports = App;
+
+});
+
+require.register("scripts/auth", function(exports, require, module) {
+var Auth = React.createClass({displayName: 'Auth',
+  render: function() {
+    return (
+      React.createElement("div", null, 
+        React.createElement("input", {id: "username", type: "text", placeholder: "GitHub username"}), 
+        React.createElement("input", {id: "password", type: "text", placeholder: "Personal API token"}), 
+        React.createElement("button", null, "Apply")
+      )
+    );
+  }
+});
+
+module.exports = Auth;
+
+});
+
+require.register("scripts/main", function(exports, require, module) {
+var Auth = require('scripts/auth');
+
+var Main = React.createClass({displayName: 'Main',
+  render: function() {
+    return (
+      React.createElement("div", null, 
+        React.createElement("h1", null, 
+          "GitBeats ", React.createElement("small", null, " • your GitHub vitals")
+        ), 
+        React.createElement(Auth, null)
+      )
+    );
+  }
+});
+
+
+React.render(
+  React.createElement(Main, null),
+  document.getElementById('main')
+);
 
 });
 

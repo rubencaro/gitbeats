@@ -2,48 +2,24 @@
 
 var App = {
 
-  main: undefined,
-
   init: function() {
-    this.main = this.mount('main')[0];
-    console.dir(this.main);
+    var user = 'rubencaro';
+    var url = 'https://api.github.com/users/' + user + '/events';
+    this.get(url).then(function(r){ console.dir(r); });
     console.log('App initialized.');
   },
 
   // make the ajax call adding the Auth header
-  // returns the promisable jqXHR object
+  // returns the promisable fetch object, with the parsed JSON as parameter
   get: function(url) {
-    return $.ajax({
-      dataType: "json",
-      url: url,
-      crossDomain: true,
-      beforeSend: function(xhr) {
-        var token = $('#token').val();
-        xhr.setRequestHeader('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
-      }
-    });
-  },
 
-  // make get request and return the response json data, or the error
-  request: function(url) {
-    var res = {};
-    // get
-    this.get(url)
-    .done(function(data){ res.data = data; })
-    .fail(function(jqXHR, textStatus){ res.error = textStatus; })
-    .always(function(){ console.dir(res) })
-    return res;
-  },
+    var h = new Headers();
+    h.append('Content-Type', 'application/json');
+    h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
 
-  // calls riot.mount for the given tag
-  mount: function(tag){
-    // require & mount
-    require('tags/' + tag);
-    return riot.mount(tag, { app: this });
-  },
+    var r = new Request(url, { headers: h, mode: 'cors' });
 
-  refresh: function(e,app){
-    app.main.update();
+    return fetch(r).then(function(r){ return r.json() })
   },
 
 };

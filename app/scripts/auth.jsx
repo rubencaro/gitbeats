@@ -1,11 +1,19 @@
 var Auth = React.createClass({
+
+  apply: function(e) {
+    e.preventDefault();
+    this.props.main.refresh({
+      username: this.refs.username.getDOMNode().value
+    });
+  },
+
   render: function() {
     return (
-      <div>
-        <input id="username" type="text" placeholder="GitHub username" />
-        <input id="password" type="text" placeholder="Personal API token" />
-        <button>Apply</button>
-      </div>
+      <form onSubmit={this.apply}>
+        <input ref="username" type="text" placeholder="GitHub username" />
+        <input ref="token" id="token" type="text" placeholder="Personal API token" />
+        <input type="submit" value="Apply" />
+      </form>
     );
   }
 });

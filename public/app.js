@@ -166,26 +166,54 @@ module.exports = Auth;
 require.register("scripts/events", function(exports, require, module) {
 var Events = React.createClass({displayName: 'Events',
 
+  app: require('app'),
+
+  getInitialState: function() { return {events: [], repos: new Map()}; },
+
   refresh: function(data) {
-    var that = this;
-    require('app').get("/users/" + data.username + "/events")
-      .then(function(json){ that.setState({events: json}); });
+    this.setState(this.getInitialState());
+    for(var i = 1; i < 3; i++) this.getPage(data,i);
   },
 
-  getInitialState: function() { return {events: []}; },
+  getPage: function(data,page){
+    var that = this;
+    this.app.get("/users/" + data.username + "/events?page=" + page)
+      .then(function(json){
+        that.setState(function(prev){ return this.saveState(prev,json); });
+      });
+  },
+
+  saveState: function(prev,json){
+    // save repo event frequency
+    for(var evt of json){
+      var k = evt.repo.name, v = 1, p = prev.repos.get(k);
+      if(p) v = p + 1;
+      prev.repos.set(k, v);
+    }
+    return {events: prev.events.concat(json), repos: prev.repos};
+  },
 
   render: function() {
 
-    var body = 'No Data';
-
+    var evts = 'No Data';
     if(this.state.events.length > 0){
-      body = this.state.events.map(function(evt,k){
+      evts = this.state.events.map(function(evt,k){
         return ( React.createElement("li", {key: k}, evt.repo.name, ": ", evt.type) );
       });
     }
 
+    var repos = [];
+    if(this.state.repos.size > 0){
+      this.state.repos.forEach(function(v,k){
+        repos.push( React.createElement("li", {key: k}, k, ": ", v) );
+      });
+    }
+
     return (
-      React.createElement("ul", {ref: "events"}, body)
+      React.createElement("div", null, 
+        React.createElement("ul", null, repos), 
+        React.createElement("ul", {ref: "events"}, evts)
+      )
     );
   }
 });

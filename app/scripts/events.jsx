@@ -1,17 +1,15 @@
 var Events = React.createClass({
 
-  app: require('app'),
-
   getInitialState: function() { return {events: [], repos: new Map()}; },
 
   refresh: function(data) {
     this.setState(this.getInitialState());
-    for(var i = 1; i < 3; i++) this.getPage(data,i);
+    for(var i = 1; i < 2; i++) this.getPage(data,i);
   },
 
   getPage: function(data,page){
     var that = this;
-    this.app.get("/users/" + data.username + "/events?page=" + page)
+    this.props.main.get("/users/" + data.username + "/events?page=" + page)
       .then(function(json){
         that.setState(function(prev){ return this.saveState(prev,json); });
       });
@@ -24,6 +22,10 @@ var Events = React.createClass({
       if(p) v = p + 1;
       prev.repos.set(k, v);
     }
+
+    this.props.main.fire('refreshRepos', { main: this.props.main,
+                                           repos: prev.repos });
+
     return {events: prev.events.concat(json), repos: prev.repos};
   },
 

@@ -119,19 +119,6 @@ var App = {
     console.log('App initialized.');
   },
 
-  // make the ajax call adding the host and the Auth header
-  // returns the promisable fetch object, with the parsed JSON as parameter
-  get: function(path) {
-    var token = document.querySelector('#token').value;
-
-    var h = new Headers();
-    h.append('Content-Type', 'application/json');
-    h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
-
-    return fetch('https://api.github.com' + path, { headers: h, mode: 'cors' })
-      .then(function(r){ return r.json(); })
-  },
-
 };
 
 module.exports = App;
@@ -143,7 +130,7 @@ var Auth = React.createClass({displayName: 'Auth',
 
   apply: function(e) {
     e.preventDefault();
-    this.props.main.refresh({
+    this.props.main.refreshEvents({
       username: this.refs.username.getDOMNode().value
     });
   },
@@ -166,18 +153,16 @@ module.exports = Auth;
 require.register("scripts/events", function(exports, require, module) {
 var Events = React.createClass({displayName: 'Events',
 
-  app: require('app'),
-
   getInitialState: function() { return {events: [], repos: new Map()}; },
 
   refresh: function(data) {
     this.setState(this.getInitialState());
-    for(var i = 1; i < 3; i++) this.getPage(data,i);
+    for(var i = 1; i < 2; i++) this.getPage(data,i);
   },
 
   getPage: function(data,page){
     var that = this;
-    this.app.get("/users/" + data.username + "/events?page=" + page)
+    this.props.main.get("/users/" + data.username + "/events?page=" + page)
       .then(function(json){
         that.setState(function(prev){ return this.saveState(prev,json); });
       });
@@ -190,6 +175,10 @@ var Events = React.createClass({displayName: 'Events',
       if(p) v = p + 1;
       prev.repos.set(k, v);
     }
+
+    this.props.main.fire('refreshRepos', { main: this.props.main,
+                                           repos: prev.repos });
+
     return {events: prev.events.concat(json), repos: prev.repos};
   },
 
@@ -225,12 +214,30 @@ module.exports = Events;
 require.register("scripts/main", function(exports, require, module) {
 var Auth = require('scripts/auth');
 var Events = require('scripts/events');
+var Repos = require('scripts/repos');
 
 var Main = React.createClass({displayName: 'Main',
 
-  // tell everyone interested to refresh its data
-  refresh: function(data) {
+  refreshEvents: function(data) {
     this.refs.events.refresh(data);
+  },
+
+  fire: function(event, data) {
+    var event = new CustomEvent(event, { 'detail': data });
+    window.dispatchEvent(event);
+  },
+
+  // make the ajax call adding the host and the Auth header
+  // returns the promisable fetch object, with the parsed JSON as parameter
+  get: function(path) {
+    var token = document.querySelector('#token').value;
+
+    var h = new Headers();
+    h.append('Content-Type', 'application/json');
+    h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
+
+    return fetch('https://api.github.com' + path, { headers: h, mode: 'cors' })
+      .then(function(r){ return r.json(); })
   },
 
   render: function() {
@@ -238,17 +245,72 @@ var Main = React.createClass({displayName: 'Main',
       React.createElement("div", null, 
         React.createElement("h1", null, " GitBeats ", React.createElement("small", null, " • your GitHub vitals"), " "), 
         React.createElement(Auth, {main: this}), 
-        React.createElement(Events, {ref: "events"})
+        React.createElement(Events, {ref: "events", main: this}), 
+        React.createElement(Repos, {ref: "repos", main: this})
       )
     );
   }
 });
 
-
 React.render(
   React.createElement(Main, null),
   document.getElementById('main')
 );
+
+});
+
+require.register("scripts/repos", function(exports, require, module) {
+var Repos = React.createClass({displayName: 'Repos',
+
+  getInitialState: function() { return {repos: new Map()}; },
+
+  componentDidMount: function() {
+    window.addEventListener('refreshRepos', this.handleRefresh);
+  },
+
+  componentWillUnmount: function() {
+    window.removeEventListener('refreshRepos', this.handleRefresh);
+  },
+
+  handleRefresh: function(e) {
+    var repos = e.detail.repos,
+        main = e.detail.main,
+        that = this;
+
+    if(!repos || repos.size == 0) return;
+
+    repos.forEach(function(v,k){
+      main.get("/repos/" + k + "/stats/contributors")
+        .then(function(json){
+          that.setState(function(prev){ return this.saveContributors(prev,json); });
+        });
+    });
+  },
+
+  saveContributors: function(prev,json) {
+    // save contributors' data
+    console.dir(json);
+    return {contributors: []};
+  },
+
+  render: function() {
+
+    var repos = [];
+    if(this.state.repos.size > 0){
+      this.state.repos.forEach(function(v,k){
+        repos.push( React.createElement("li", {key: k}, k, ": ", v) );
+      });
+    }
+
+    return (
+      React.createElement("div", null, 
+        React.createElement("ul", {ref: "repos"}, repos)
+      )
+    );
+  }
+});
+
+module.exports = Repos;
 
 });
 

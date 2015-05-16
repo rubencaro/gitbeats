@@ -19,8 +19,6 @@ It lives on the client. No auth logic. You must supply a username and a [persona
 
 ## TODOs
 
-* gather last /users/:user/events (7 days maybe)
-* get the involved repos list
 * from there for each repo:
   * gather /repos/:owner/:repo/stats/contributors
     * select only data for the last week for each user

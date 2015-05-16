@@ -2,7 +2,7 @@ var Auth = React.createClass({
 
   apply: function(e) {
     e.preventDefault();
-    this.props.main.refresh({
+    this.props.main.refreshEvents({
       username: this.refs.username.getDOMNode().value
     });
   },

@@ -119,6 +119,72 @@ var App = {
     console.log('App initialized.');
   },
 
+  // helper to fire given custom event and pass it the given data
+  fire: function(event, data) {
+    var event = new CustomEvent(event, { 'detail': data });
+    window.dispatchEvent(event);
+  },
+
+  // make the ajax call adding the host and the Auth header
+  // returns the promisable fetch object, with the parsed JSON as parameter
+  get: function(path) {
+    var token = document.querySelector('#token').value;
+
+    var h = new Headers();
+    h.append('Content-Type', 'application/json');
+    h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
+
+    return fetch('https://api.github.com' + path, { headers: h, mode: 'cors' })
+      .then(function(r){ return r.json(); })
+  },
+
+  // main entry point for the state calculation
+  startDataGathering: function(main) {
+    var data = {};
+    data.username = document.querySelector('#username').value;
+
+    // get every events page of the 10 max, and save the events
+    data.events = [];
+    for(var i = 1; i < 2; i++) this.getEventsPage(data, main, i);
+
+    // // calc event count by repo
+    // data.repoEvents = new Map();
+    // this.guessRepoEventFrequency(data);
+    //
+    // // gather contributors for each repo
+    // data.repoContributors = new Map();
+    // data.repoEvents.forEach(function(v, k){
+    //     that.gatherRepoContributors(data, k);
+    //   });
+
+  },
+
+  getEventsPage: function(data, main, page) {
+    this.get("/users/" + data.username + "/events?page=" + page)
+      .then(function(json){
+          main.setState(function(prev){ return prev.events.concat(json); });
+        });
+  },
+
+  // calc repo event frequency
+  guessRepoEventFrequency: function(data) {
+    for(var evt in data.events){
+      var k = evt.repo.name, v = 1, p = data.repoEvents.get(k);
+      if(p) v = p + 1;
+      data.repoEvents.set(k, v);
+    }
+  },
+
+  gatherRepoContributors: function(data, repo) {
+    this.props.main.get("/repos/" + repo + "/stats/contributors")
+      .then(function(json){
+        data.repoContributors.set(repo,json);
+        that.setState(function(prev){
+            return this.saveContributors(prev,json);
+        });
+      });
+  },
+
 };
 
 module.exports = App;
@@ -130,16 +196,14 @@ var Auth = React.createClass({displayName: 'Auth',
 
   apply: function(e) {
     e.preventDefault();
-    this.props.main.refreshEvents({
-      username: this.refs.username.getDOMNode().value
-    });
+    require('app').startDataGathering(this.props.main);
   },
 
   render: function() {
     return (
       React.createElement("form", {onSubmit: this.apply}, 
-        React.createElement("input", {ref: "username", type: "text", placeholder: "GitHub username"}), 
-        React.createElement("input", {ref: "token", id: "token", type: "text", placeholder: "Personal API token"}), 
+        React.createElement("input", {id: "username", type: "text", placeholder: "GitHub username"}), 
+        React.createElement("input", {id: "token", type: "text", placeholder: "Personal API token"}), 
         React.createElement("input", {type: "submit", value: "Apply"})
       )
     );
@@ -153,46 +217,19 @@ module.exports = Auth;
 require.register("scripts/events", function(exports, require, module) {
 var Events = React.createClass({displayName: 'Events',
 
-  getInitialState: function() { return {events: [], repos: new Map()}; },
-
-  refresh: function(data) {
-    this.setState(this.getInitialState());
-    for(var i = 1; i < 2; i++) this.getPage(data,i);
-  },
-
-  getPage: function(data,page){
-    var that = this;
-    this.props.main.get("/users/" + data.username + "/events?page=" + page)
-      .then(function(json){
-        that.setState(function(prev){ return this.saveState(prev,json); });
-      });
-  },
-
-  saveState: function(prev,json){
-    // save repo event frequency
-    for(var evt of json){
-      var k = evt.repo.name, v = 1, p = prev.repos.get(k);
-      if(p) v = p + 1;
-      prev.repos.set(k, v);
-    }
-
-    this.props.main.fire('refreshRepos', { main: this.props.main,
-                                           repos: prev.repos });
-
-    return {events: prev.events.concat(json), repos: prev.repos};
-  },
-
   render: function() {
 
+    if(!this.state) return(React.createElement("div", null, "No Data"));
+
     var evts = 'No Data';
-    if(this.state.events.length > 0){
+    if(this.state.events && this.state.events.length > 0){
       evts = this.state.events.map(function(evt,k){
         return ( React.createElement("li", {key: k}, evt.repo.name, ": ", evt.type) );
       });
     }
 
     var repos = [];
-    if(this.state.repos.size > 0){
+    if(this.state.repos && this.state.repos.size > 0){
       this.state.repos.forEach(function(v,k){
         repos.push( React.createElement("li", {key: k}, k, ": ", v) );
       });
@@ -218,27 +255,7 @@ var Repos = require('scripts/repos');
 
 var Main = React.createClass({displayName: 'Main',
 
-  refreshEvents: function(data) {
-    this.refs.events.refresh(data);
-  },
-
-  fire: function(event, data) {
-    var event = new CustomEvent(event, { 'detail': data });
-    window.dispatchEvent(event);
-  },
-
-  // make the ajax call adding the host and the Auth header
-  // returns the promisable fetch object, with the parsed JSON as parameter
-  get: function(path) {
-    var token = document.querySelector('#token').value;
-
-    var h = new Headers();
-    h.append('Content-Type', 'application/json');
-    h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
-
-    return fetch('https://api.github.com' + path, { headers: h, mode: 'cors' })
-      .then(function(r){ return r.json(); })
-  },
+  getInitialState: function() { return {events: []}; },
 
   render: function() {
     return (
@@ -259,40 +276,8 @@ React.render(
 
 });
 
-require.register("scripts/repos", function(exports, require, module) {
-var Repos = React.createClass({displayName: 'Repos',
-
-  getInitialState: function() { return {repos: new Map()}; },
-
-  componentDidMount: function() {
-    window.addEventListener('refreshRepos', this.handleRefresh);
-  },
-
-  componentWillUnmount: function() {
-    window.removeEventListener('refreshRepos', this.handleRefresh);
-  },
-
-  handleRefresh: function(e) {
-    var repos = e.detail.repos,
-        main = e.detail.main,
-        that = this;
-
-    if(!repos || repos.size == 0) return;
-
-    repos.forEach(function(v,k){
-      main.get("/repos/" + k + "/stats/contributors")
-        .then(function(json){
-          that.setState(function(prev){ return this.saveContributors(prev,json); });
-        });
-    });
-  },
-
-  saveContributors: function(prev,json) {
-    // save contributors' data
-    console.dir(json);
-    return {contributors: []};
-  },
-
+require.register("scripts/repo", function(exports, require, module) {
+var Repo = React.createClass({displayName: 'Repo',
   render: function() {
 
     var repos = [];
@@ -305,6 +290,32 @@ var Repos = React.createClass({displayName: 'Repos',
     return (
       React.createElement("div", null, 
         React.createElement("ul", {ref: "repos"}, repos)
+      )
+    );
+  }
+});
+
+module.exports = Repo;
+
+});
+
+require.register("scripts/repos", function(exports, require, module) {
+var Repo = require('scripts/repo');
+
+var Repos = React.createClass({displayName: 'Repos',
+
+  render: function() {
+
+    var repos = [];
+    if(this.state && this.state.repos && this.state.repos.size > 0){
+      this.state.repos.forEach(function(v,k){
+        repos.push( React.createElement(Repo, {key: k, name: k}) );
+      });
+    }
+
+    return (
+      React.createElement("div", {ref: "repos"}, 
+        repos
       )
     );
   }

@@ -4,27 +4,7 @@ var Repos = require('scripts/repos');
 
 var Main = React.createClass({
 
-  refreshEvents: function(data) {
-    this.refs.events.refresh(data);
-  },
-
-  fire: function(event, data) {
-    var event = new CustomEvent(event, { 'detail': data });
-    window.dispatchEvent(event);
-  },
-
-  // make the ajax call adding the host and the Auth header
-  // returns the promisable fetch object, with the parsed JSON as parameter
-  get: function(path) {
-    var token = document.querySelector('#token').value;
-
-    var h = new Headers();
-    h.append('Content-Type', 'application/json');
-    h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
-
-    return fetch('https://api.github.com' + path, { headers: h, mode: 'cors' })
-      .then(function(r){ return r.json(); })
-  },
+  getInitialState: function() { return {events: []}; },
 
   render: function() {
     return (

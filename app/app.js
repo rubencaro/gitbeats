@@ -14,7 +14,7 @@ var App = {
   },
 
   // make the ajax call adding the host and the Auth header
-  // returns the promisable fetch object, with the parsed JSON as parameter
+  // returns the promisable fetch object
   get: function(path) {
     var token = document.querySelector('#token').value;
 
@@ -23,7 +23,6 @@ var App = {
     h.append('Authorization', "Basic " + btoa(token + ":x-oauth-basic"));
 
     return fetch('https://api.github.com' + path, { headers: h, mode: 'cors' })
-      .then(function(r){ return r.json(); })
   },
 
   // main entry point for the state calculation
@@ -32,7 +31,7 @@ var App = {
     data.username = document.querySelector('#username').value;
 
     // get every events page of the 10 max, and save the events
-    data.events = [];
+    main.setState({events: []});
     for(var i = 1; i < 2; i++) this.getEventsPage(data, main, i);
 
     // // calc event count by repo
@@ -49,8 +48,10 @@ var App = {
 
   getEventsPage: function(data, main, page) {
     this.get("/users/" + data.username + "/events?page=" + page)
-      .then(function(json){
-          main.setState(function(prev){ return prev.events.concat(json); });
+      .then(function(r){return r.json()}).then(function(json){
+          main.setState(function(prev){
+              return {events: prev.events.concat(json)};
+            });
         });
   },
 

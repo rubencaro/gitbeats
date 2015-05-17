@@ -11,12 +11,13 @@ var Main = React.createClass({
       <div>
         <h1> GitBeats <small> • your GitHub vitals</small> </h1>
         <Auth main={this}></Auth>
-        <Events ref="events" main={this}></Events>
-        <Repos ref="repos" main={this}></Repos>
+        <Events events={this.state.events}></Events>
       </div>
     );
   }
 });
+// <RepoEventFrequencies events={this.state.events}></RepoEventFrequencies>
+// <Repos repos={this.state.repos}></Repos>
 
 React.render(
   <Main></Main>,
